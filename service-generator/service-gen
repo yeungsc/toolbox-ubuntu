@@ -6,37 +6,49 @@
 # 	exit 0
 # fi
 
-while getopts n:d:e:w: flag
+function usage(){
+	echo "usage: service-gen -n <name of service> -d <description> -e <executing command> -w <working directory>"
+	exit 1
+}
+
+while getopts n:d:e:wh flag
 do
 	case "${flag}" in
-		n) name=${OPTARG};;
-		d) description=${OPTARG};;
-		e) execute=${OPTARG};;
-		w) directory=${OPTARG};;
+		(n) name=${OPTARG};;
+		(d) description=${OPTARG};;
+		(e) execute=${OPTARG};;
+		(w) directory=${OPTARG};;
+		(h) usage;;
+		(*) usage
+	  	   exit;;
+		
 	esac
 done
 
 defaultpath="/etc/systemd/system/"
 
-
-if [[ -z "$description" || -z "$execute" || -z "$directory" ]]; then
+if [[ -z "$description" || -z "$execute" ]]; then # || -z "$directory" ]]; then
 	echo "Missing Arguments"
 else
 	if [[ -z "$name" ]]; then 
 		name="newservice"
 	fi
-	# Check if service name exist in folder
+	# Check if serv"ce name exist in folder
 	cp ./template.service ./$name.service
 	sed -i "s/desc/$description/" ./$name.service
-	sed -i "s/executable/${execute}/" ./$name.service
-	sed -i "s/wrkdir/${directory}/" ./$name.service
+	sed -i "s|executable|${execute}|g" ./$name.service
+	if [[ -z "$directory" ]]; then 
+		sed -i "6d" ./$name.service 
+	else
+		sed -i "s/wrkdir/${directory}/" ./$name.service
+	fi
 
 	if [ -f "$defaultpath/$name.service" ]; then 
 		# file already exit, ask if enabling?
 		while true; do
 			read -p "File already exist, Do you want to override?" yn
 			case $yn in
-				[Yy]* ) mv ./$name.service $defaultpath; break;;
+				[Yy]* ) mv ./$name.service $defaultpath;systemctl daemon-reload;break;;
 				[Nn]* ) rm ./$name.service; break;;
 			esac
 		done
@@ -50,7 +62,6 @@ else
 	else
 		# file doesn't exist, try to create
 				mv ./$name.service $defaultpath/
-		# rm -rf ./$name.service
 		systemctl daemon-reload
 		while true; do
 			read -p "Do you want to enable the service?" yn
@@ -59,15 +70,17 @@ else
 				[Nn]* ) break;;
 			esac
 		done
+		while true; do
+			read -p "Do you want to start the service?" yn
+			case $yn in
+				[Yy]* ) systemctl start $name.service; break;;
+				[Nn]* ) break;;
+			esac
+		done
+
 	fi	
-	echo 'Completed Operation'
-	
-
-	#echo $name
-	#	cat ./$name.service
-	## Check and replace
-
-	
+	systemctl status $name.service 
 fi
 
+exit 0
 
