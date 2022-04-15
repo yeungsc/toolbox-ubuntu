@@ -7,7 +7,13 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 function usage(){
-	echo "usage: service-gen -n <name of service> -d <description> -e <executing command> -w <working directory>"
+	echo """usage: 
+		service-gen -n <name of service> -d <description> -e <executing command> -w <working directory>
+		
+		example:
+
+			sudo ./service-gen -n ss-libev-41116 -d "shadowsocks-libev-41116" -e "/usr/local/bin/ss-local -c /etc/shadowsocks-libev/nginx-split/41116.json -u"
+		"""	
 	exit 1
 }
 
