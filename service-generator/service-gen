@@ -1,0 +1,73 @@
+#!/bin/bash
+# Basic Generator script for services;
+
+# if [[ "$(whoami)" ==  "root" ]]; then 
+# 	echo "$(whoami)"
+# 	exit 0
+# fi
+
+while getopts n:d:e:w: flag
+do
+	case "${flag}" in
+		n) name=${OPTARG};;
+		d) description=${OPTARG};;
+		e) execute=${OPTARG};;
+		w) directory=${OPTARG};;
+	esac
+done
+
+defaultpath="/etc/systemd/system/"
+
+
+if [[ -z "$description" || -z "$execute" || -z "$directory" ]]; then
+	echo "Missing Arguments"
+else
+	if [[ -z "$name" ]]; then 
+		name="newservice"
+	fi
+	# Check if service name exist in folder
+	cp ./template.service ./$name.service
+	sed -i "s/desc/$description/" ./$name.service
+	sed -i "s/executable/${execute}/" ./$name.service
+	sed -i "s/wrkdir/${directory}/" ./$name.service
+
+	if [ -f "$defaultpath/$name.service" ]; then 
+		# file already exit, ask if enabling?
+		while true; do
+			read -p "File already exist, Do you want to override?" yn
+			case $yn in
+				[Yy]* ) mv ./$name.service $defaultpath; break;;
+				[Nn]* ) rm ./$name.service; break;;
+			esac
+		done
+		while true; do
+			read -p "Do you want to start the service?" yn
+			case $yn in
+				[Yy]* ) systemctl restart $name.service; break;;
+				[Nn]* ) break;;
+			esac
+		done
+	else
+		# file doesn't exist, try to create
+				mv ./$name.service $defaultpath/
+		# rm -rf ./$name.service
+		systemctl daemon-reload
+		while true; do
+			read -p "Do you want to enable the service?" yn
+			case $yn in
+				[Yy]* ) systemctl enable $name.service; break;;
+				[Nn]* ) break;;
+			esac
+		done
+	fi	
+	echo 'Completed Operation'
+	
+
+	#echo $name
+	#	cat ./$name.service
+	## Check and replace
+
+	
+fi
+
+

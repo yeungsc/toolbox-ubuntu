@@ -1,0 +1,10 @@
+[Unit]
+Description=desc
+
+[Service]
+ExecStart=executable
+WorkingDirectory=wrkdir
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
