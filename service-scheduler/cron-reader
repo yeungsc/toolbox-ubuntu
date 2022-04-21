@@ -1,0 +1,3 @@
+list="$(crontab -l | grep -ve '^#\|^$')"
+
+echo "$list"
